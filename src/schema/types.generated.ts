@@ -22,8 +22,17 @@ export type RequireFields<T, K extends keyof T> = Omit<T, K> & {
   [P in K]-?: NonNullable<T[P]>;
 };
 /** All built-in and custom scalars, mapped to their actual values */
+// Note 1: This input/output makes sense for client types too! However, it would be inverted i.e.
+// ID: {
+//   input: string | number;
+//   output: string
+// }
+//
 export type Scalars = {
-  ID: string;
+  ID: {
+    input: string;
+    output: string | number;
+  };
   String: string;
   Boolean: boolean;
   Int: number;
@@ -33,7 +42,7 @@ export type Scalars = {
 
 export type Book = {
   __typename: "Book";
-  id: Scalars["ID"];
+  id: Scalars["ID"]["output"]; // Note 1a: This would still make sense for the client type generation 🎉
   isbn: Scalars["String"];
 };
 
@@ -46,7 +55,7 @@ export type BookResult = {
 
 export type Magazine = {
   __typename: "Magazine";
-  id: Scalars["ID"];
+  id: Scalars["ID"]["output"];
   issueNumber: Scalars["Int"];
 };
 
@@ -69,22 +78,22 @@ export type Query = {
 };
 
 export type QueryBookArgs = {
-  id: Scalars["ID"];
+  id: Scalars["ID"]["input"];
 };
 
 export type QueryReadableArgs = {
-  id: Scalars["ID"];
+  id: Scalars["ID"]["input"];
 };
 
 export type QueryUserArgs = {
-  id: Scalars["ID"];
+  id: Scalars["ID"]["input"];
 };
 
 export type Readable = Magazine | ShortNovel;
 
 export type ShortNovel = {
   __typename: "ShortNovel";
-  id: Scalars["ID"];
+  id: Scalars["ID"]["output"];
   summary: Scalars["String"];
 };
 
@@ -92,7 +101,7 @@ export type User = {
   __typename: "User";
   booksRead: Array<Book>;
   fullName: Scalars["String"];
-  id: Scalars["ID"];
+  id: Scalars["ID"]["output"];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -221,7 +230,7 @@ export type ResolversUnionParentTypes = {
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Book: ResolverTypeWrapper<BookMapper>;
-  ID: ResolverTypeWrapper<Scalars["ID"]>;
+  ID: ResolverTypeWrapper<Scalars["ID"]["output"]>;
   String: ResolverTypeWrapper<Scalars["String"]>;
   BookPayload: ResolverTypeWrapper<ResolversUnionTypes["BookPayload"]>;
   BookResult: ResolverTypeWrapper<
@@ -242,7 +251,7 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Book: BookMapper;
-  ID: Scalars["ID"];
+  ID: Scalars["ID"]["output"];
   String: Scalars["String"];
   BookPayload: ResolversUnionParentTypes["BookPayload"];
   BookResult: Omit<BookResult, "result"> & {

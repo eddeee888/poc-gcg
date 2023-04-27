@@ -1,7 +1,7 @@
 import type { QueryResolvers } from "./../../../types.generated";
 export const book: NonNullable<QueryResolvers["book"]> = async (
   _parent,
-  { id },
+  { id }, // Note 3: This is `string` 👍
   { data }
 ) => {
   return {
