@@ -31,9 +31,16 @@ export type Scalars = {
   DateTime: Date | string;
 };
 
+// Note 1: This ResolversScalars type is used as resolvers' return type:
+// - all Schema Object Type that uses Scalars['ID']: must change to ResolversScalars['ID']
+// - ResolverTypes['ID'] and ResolverParentTypes['ID']: must use ResolversScalars['ID']
+export type ResolversScalars = {
+  ID: string | number;
+};
+
 export type Book = {
   __typename: "Book";
-  id: Scalars["ID"];
+  id: ResolversScalars["ID"];
   isbn: Scalars["String"];
 };
 
@@ -46,7 +53,7 @@ export type BookResult = {
 
 export type Magazine = {
   __typename: "Magazine";
-  id: Scalars["ID"];
+  id: ResolversScalars["ID"];
   issueNumber: Scalars["Int"];
 };
 
@@ -84,7 +91,7 @@ export type Readable = Magazine | ShortNovel;
 
 export type ShortNovel = {
   __typename: "ShortNovel";
-  id: Scalars["ID"];
+  id: ResolversScalars["ID"];
   summary: Scalars["String"];
 };
 
@@ -92,7 +99,7 @@ export type User = {
   __typename: "User";
   booksRead: Array<Book>;
   fullName: Scalars["String"];
-  id: Scalars["ID"];
+  id: ResolversScalars["ID"];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -221,7 +228,7 @@ export type ResolversUnionParentTypes = {
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Book: ResolverTypeWrapper<BookMapper>;
-  ID: ResolverTypeWrapper<Scalars["ID"]>;
+  ID: ResolverTypeWrapper<ResolversScalars["ID"]>;
   String: ResolverTypeWrapper<Scalars["String"]>;
   BookPayload: ResolverTypeWrapper<ResolversUnionTypes["BookPayload"]>;
   BookResult: ResolverTypeWrapper<
@@ -242,7 +249,7 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Book: BookMapper;
-  ID: Scalars["ID"];
+  ID: ResolversScalars["ID"];
   String: Scalars["String"];
   BookPayload: ResolversUnionParentTypes["BookPayload"];
   BookResult: Omit<BookResult, "result"> & {

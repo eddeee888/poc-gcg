@@ -18,14 +18,14 @@ export const readable: NonNullable<QueryResolvers["readable"]> = async (
     const readableObject = data.magazines[readableId];
     return {
       __typename: "Magazine",
-      id: readableObject.id,
+      id: readableObject.id, // Note 4a: `id` here is `string | number` 👍
       issueNumber: readableObject.issueNumber,
     };
   } else if (readableType === "ShortNovel") {
     const readableObject = data.shortNovels[readableId];
     return {
       __typename: "ShortNovel",
-      id: readableObject.id,
+      id: readableObject.id, // Note 4b: `id` here is `string | number` 👍
       summary: readableObject.summary,
     };
   } else {
