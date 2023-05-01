@@ -7,13 +7,19 @@ import { Magazine } from "./book/resolvers/Magazine";
 import { PayloadError } from "./base/resolvers/PayloadError";
 import { book as Query_book } from "./book/resolvers/Query/book";
 import { readable as Query_readable } from "./book/resolvers/Query/readable";
+import { shortNovel as Query_shortNovel } from "./book/resolvers/Query/shortNovel";
 import { user as Query_user } from "./user/resolvers/Query/user";
 import { Readable } from "./book/resolvers/Readable";
 import { ShortNovel } from "./book/resolvers/ShortNovel";
 import { User } from "./user/resolvers/User";
 import { DateTimeResolver } from "graphql-scalars";
 export const resolvers: Resolvers = {
-  Query: { book: Query_book, readable: Query_readable, user: Query_user },
+  Query: {
+    book: Query_book,
+    readable: Query_readable,
+    shortNovel: Query_shortNovel,
+    user: Query_user,
+  },
 
   Book: Book,
   BookPayload: BookPayload,

@@ -1,6 +1,7 @@
 extend type Query {
   book(id: ID!): BookPayload!
   readable(id: ID!): Readable
+  shortNovel(inputDateTime: DateTime!): ShortNovel
 }
 
 type Book {
@@ -17,6 +18,7 @@ union BookPayload = BookResult | PayloadError
 type ShortNovel {
   id: ID!
   summary: String!
+  outputDateTime: DateTime
 }
 
 type Magazine {

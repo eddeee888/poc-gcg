@@ -33,16 +33,19 @@ export type Scalars = {
     input: string;
     output: string | number;
   };
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
-  DateTime: Date | string;
+  String: string; // These should be turned into input/output
+  Boolean: boolean; // These should be turned into input/output
+  Int: number; // These should be turned into input/output
+  Float: number; // These should be turned into input/output
+  DateTime: {
+    input: Date; // Note 1a: `DateTime` scalar always turn input into a `Date`
+    output: Date | string | number; // Note 1b: `DateTime` scalar can serialize a `Date` object or ISO string or Unix timestamp (in milliseconds)
+  };
 };
 
 export type Book = {
   __typename: "Book";
-  id: Scalars["ID"]["output"]; // Note 1a: This would still make sense for the client type generation 🎉
+  id: Scalars["ID"]["output"]; // Note 1c: This would still make sense for the client type generation 🎉
   isbn: Scalars["String"];
 };
 
@@ -74,6 +77,7 @@ export type Query = {
   __typename: "Query";
   book: BookPayload;
   readable?: Maybe<Readable>;
+  shortNovel?: Maybe<ShortNovel>;
   user?: Maybe<User>;
 };
 
@@ -85,6 +89,10 @@ export type QueryReadableArgs = {
   id: Scalars["ID"]["input"];
 };
 
+export type QueryShortNovelArgs = {
+  inputDateTime: Scalars["DateTime"]["input"];
+};
+
 export type QueryUserArgs = {
   id: Scalars["ID"]["input"];
 };
@@ -94,6 +102,7 @@ export type Readable = Magazine | ShortNovel;
 export type ShortNovel = {
   __typename: "ShortNovel";
   id: Scalars["ID"]["output"];
+  outputDateTime?: Maybe<Scalars["DateTime"]["output"]>;
   summary: Scalars["String"];
 };
 
@@ -236,7 +245,7 @@ export type ResolversTypes = {
   BookResult: ResolverTypeWrapper<
     Omit<BookResult, "result"> & { result?: Maybe<ResolversTypes["Book"]> }
   >;
-  DateTime: ResolverTypeWrapper<Scalars["DateTime"]>;
+  DateTime: ResolverTypeWrapper<Scalars["DateTime"]["output"]>;
   Magazine: ResolverTypeWrapper<Magazine>;
   Int: ResolverTypeWrapper<Scalars["Int"]>;
   PayloadError: ResolverTypeWrapper<PayloadError>;
@@ -257,7 +266,7 @@ export type ResolversParentTypes = {
   BookResult: Omit<BookResult, "result"> & {
     result?: Maybe<ResolversParentTypes["Book"]>;
   };
-  DateTime: Scalars["DateTime"];
+  DateTime: Scalars["DateTime"]["output"];
   Magazine: Magazine;
   Int: Scalars["Int"];
   PayloadError: PayloadError;
@@ -334,6 +343,12 @@ export type QueryResolvers<
     ContextType,
     RequireFields<QueryReadableArgs, "id">
   >;
+  shortNovel?: Resolver<
+    Maybe<ResolversTypes["ShortNovel"]>,
+    ParentType,
+    ContextType,
+    RequireFields<QueryShortNovelArgs, "inputDateTime">
+  >;
   user?: Resolver<
     Maybe<ResolversTypes["User"]>,
     ParentType,
@@ -358,6 +373,11 @@ export type ShortNovelResolvers<
   ParentType extends ResolversParentTypes["ShortNovel"] = ResolversParentTypes["ShortNovel"]
 > = {
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  outputDateTime?: Resolver<
+    Maybe<ResolversTypes["DateTime"]>,
+    ParentType,
+    ContextType
+  >;
   summary?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

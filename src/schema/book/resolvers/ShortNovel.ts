@@ -1,4 +1,7 @@
 import type { ShortNovelResolvers } from "./../../types.generated";
 export const ShortNovel: ShortNovelResolvers = {
-  /* Implement ShortNovel resolver logic here */
+  outputDateTime: ({ outputDateTime }) => {
+    // Note 5: this is `string | number | Date` 👍
+    return outputDateTime || null;
+  },
 };
