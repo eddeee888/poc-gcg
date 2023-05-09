@@ -22,5 +22,10 @@
     "ts-node": "10.9.1",
     "ts-node-dev": "2.0.0",
     "typescript": "5.0.4"
+  },
+  "resolutions": {
+    "@graphql-codegen/visitor-plugin-common": "3.2.0-alpha-20230509131109-93df736a6",
+    "@graphql-codegen/typescript-resolvers": "3.3.0-alpha-20230509131109-93df736a6",
+    "@graphql-codegen/typescript": "3.1.0-alpha-20230509131109-93df736a6"
   }
 }

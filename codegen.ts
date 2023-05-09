@@ -10,6 +10,16 @@ const config: CodegenConfig = {
     "src/schema": defineConfig({
       typesPluginsConfig: {
         contextType: "../index#ResolverContext",
+        scalars: {
+          ID: {
+            input: "string",
+            output: "string | number",
+          },
+          DateTime: {
+            input: "Date",
+            output: "Date | string | number",
+          },
+        },
       },
     }),
   },

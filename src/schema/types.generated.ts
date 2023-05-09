@@ -17,36 +17,33 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
   [SubKey in K]: Maybe<T[SubKey]>;
 };
+export type MakeEmpty<
+  T extends { [key: string]: unknown },
+  K extends keyof T
+> = { [_ in K]?: never };
+export type Incremental<T> =
+  | T
+  | {
+      [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never;
+    };
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & {
   [P in K]-?: NonNullable<T[P]>;
 };
 /** All built-in and custom scalars, mapped to their actual values */
-// Note 1: This input/output makes sense for client types too! However, it would be inverted i.e.
-// ID: {
-//   input: string | number;
-//   output: string
-// }
-//
 export type Scalars = {
-  ID: {
-    input: string;
-    output: string | number;
-  };
-  String: string; // These should be turned into input/output
-  Boolean: boolean; // These should be turned into input/output
-  Int: number; // These should be turned into input/output
-  Float: number; // These should be turned into input/output
-  DateTime: {
-    input: Date; // Note 1a: `DateTime` scalar always turn input into a `Date`
-    output: Date | string | number; // Note 1b: `DateTime` scalar can serialize a `Date` object or ISO string or Unix timestamp (in milliseconds)
-  };
+  ID: { input: string; output: string | number };
+  String: { input: string; output: string };
+  Boolean: { input: boolean; output: boolean };
+  Int: { input: number; output: number };
+  Float: { input: number; output: number };
+  DateTime: { input: Date; output: Date | string | number };
 };
 
 export type Book = {
   __typename: "Book";
-  id: Scalars["ID"]["output"]; // Note 1c: This would still make sense for the client type generation 🎉
-  isbn: Scalars["String"];
+  id: Scalars["ID"]["output"];
+  isbn: Scalars["String"]["output"];
 };
 
 export type BookPayload = BookResult | PayloadError;
@@ -59,7 +56,7 @@ export type BookResult = {
 export type Magazine = {
   __typename: "Magazine";
   id: Scalars["ID"]["output"];
-  issueNumber: Scalars["Int"];
+  issueNumber: Scalars["Int"]["output"];
 };
 
 export type PayloadError = {
@@ -103,13 +100,13 @@ export type ShortNovel = {
   __typename: "ShortNovel";
   id: Scalars["ID"]["output"];
   outputDateTime?: Maybe<Scalars["DateTime"]["output"]>;
-  summary: Scalars["String"];
+  summary: Scalars["String"]["output"];
 };
 
 export type User = {
   __typename: "User";
   booksRead: Array<Book>;
-  fullName: Scalars["String"];
+  fullName: Scalars["String"]["output"];
   id: Scalars["ID"]["output"];
 };
 
@@ -219,19 +216,9 @@ export type DirectiveResolverFn<
 ) => TResult | Promise<TResult>;
 
 /** Mapping of union types */
-export type ResolversUnionTypes = {
+export type ResolversUnionTypes<RefType extends Record<string, unknown>> = {
   BookPayload:
-    | (Omit<BookResult, "result"> & { result?: Maybe<ResolversTypes["Book"]> })
-    | PayloadError;
-  Readable: Magazine | ShortNovel;
-};
-
-/** Mapping of union parent types */
-export type ResolversUnionParentTypes = {
-  BookPayload:
-    | (Omit<BookResult, "result"> & {
-        result?: Maybe<ResolversParentTypes["Book"]>;
-      })
+    | (Omit<BookResult, "result"> & { result?: Maybe<RefType["Book"]> })
     | PayloadError;
   Readable: Magazine | ShortNovel;
 };
@@ -240,41 +227,45 @@ export type ResolversUnionParentTypes = {
 export type ResolversTypes = {
   Book: ResolverTypeWrapper<BookMapper>;
   ID: ResolverTypeWrapper<Scalars["ID"]["output"]>;
-  String: ResolverTypeWrapper<Scalars["String"]>;
-  BookPayload: ResolverTypeWrapper<ResolversUnionTypes["BookPayload"]>;
+  String: ResolverTypeWrapper<Scalars["String"]["output"]>;
+  BookPayload: ResolverTypeWrapper<
+    ResolversUnionTypes<ResolversTypes>["BookPayload"]
+  >;
   BookResult: ResolverTypeWrapper<
     Omit<BookResult, "result"> & { result?: Maybe<ResolversTypes["Book"]> }
   >;
   DateTime: ResolverTypeWrapper<Scalars["DateTime"]["output"]>;
   Magazine: ResolverTypeWrapper<Magazine>;
-  Int: ResolverTypeWrapper<Scalars["Int"]>;
+  Int: ResolverTypeWrapper<Scalars["Int"]["output"]>;
   PayloadError: ResolverTypeWrapper<PayloadError>;
   PayloadErrorType: PayloadErrorType;
   Query: ResolverTypeWrapper<{}>;
-  Readable: ResolverTypeWrapper<ResolversUnionTypes["Readable"]>;
+  Readable: ResolverTypeWrapper<
+    ResolversUnionTypes<ResolversTypes>["Readable"]
+  >;
   ShortNovel: ResolverTypeWrapper<ShortNovel>;
   User: ResolverTypeWrapper<UserMapper>;
-  Boolean: ResolverTypeWrapper<Scalars["Boolean"]>;
+  Boolean: ResolverTypeWrapper<Scalars["Boolean"]["output"]>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Book: BookMapper;
   ID: Scalars["ID"]["output"];
-  String: Scalars["String"];
-  BookPayload: ResolversUnionParentTypes["BookPayload"];
+  String: Scalars["String"]["output"];
+  BookPayload: ResolversUnionTypes<ResolversParentTypes>["BookPayload"];
   BookResult: Omit<BookResult, "result"> & {
     result?: Maybe<ResolversParentTypes["Book"]>;
   };
   DateTime: Scalars["DateTime"]["output"];
   Magazine: Magazine;
-  Int: Scalars["Int"];
+  Int: Scalars["Int"]["output"];
   PayloadError: PayloadError;
   Query: {};
-  Readable: ResolversUnionParentTypes["Readable"];
+  Readable: ResolversUnionTypes<ResolversParentTypes>["Readable"];
   ShortNovel: ShortNovel;
   User: UserMapper;
-  Boolean: Scalars["Boolean"];
+  Boolean: Scalars["Boolean"]["output"];
 };
 
 export type BookResolvers<
