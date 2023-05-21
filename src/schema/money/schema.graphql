@@ -1,0 +1,39 @@
+extend type Query {
+  breakdown: RealTimeFinancingBreakdown!
+}
+
+type PriceAmount {
+  amount: Float
+  amountDisplayed: Boolean
+  currency: String
+  display(locale: String): String
+  includingVat: Boolean!
+  selector: String
+  source: String!
+  taxAmount: Float
+}
+
+type PricePoint {
+  displayPrice: PriceAmount
+  priceExclTax: PriceAmount
+  priceInclNonVatTax: PriceAmount
+  priceInclTax: PriceAmount
+  priceInclVat: PriceAmount
+  taxAmount: PriceAmount
+  vatAmount: PriceAmount
+}
+
+type RealTimeFinancingBreakdown {
+  adjustedPreFinancingAmount: PricePoint
+  creditAmount: PriceAmount
+  excessMileageRate: Float
+  finalPaymentAmount: PriceAmount
+  financeDiscountContribution: PricePoint
+  financedAmount: PriceAmount
+  interestAmount: PriceAmount
+  perInstallmentPrice: PriceAmount
+  preFinancingPrice: PricePoint
+  referenceId: String
+  totalDeposit: PricePoint
+  totalPayableAmount: PriceAmount
+}

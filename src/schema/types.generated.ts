@@ -4,6 +4,7 @@ import {
   GraphQLScalarTypeConfig,
 } from "graphql";
 import { BookMapper } from "./book/schema.mappers";
+import { PriceAmountMapper } from "./money/schema.mappers";
 import { UserMapper } from "./user/schema.mappers";
 import { ResolverContext } from "../index";
 export type Maybe<T> = T | null;
@@ -17,24 +18,33 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
   [SubKey in K]: Maybe<T[SubKey]>;
 };
+export type MakeEmpty<
+  T extends { [key: string]: unknown },
+  K extends keyof T
+> = { [_ in K]?: never };
+export type Incremental<T> =
+  | T
+  | {
+      [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never;
+    };
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & {
   [P in K]-?: NonNullable<T[P]>;
 };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
-  DateTime: Date | string;
+  ID: { input: string | number; output: string };
+  String: { input: string; output: string };
+  Boolean: { input: boolean; output: boolean };
+  Int: { input: number; output: number };
+  Float: { input: number; output: number };
+  DateTime: { input: Date | string; output: Date | string };
 };
 
 export type Book = {
   __typename: "Book";
-  id: Scalars["ID"];
-  isbn: Scalars["String"];
+  id: Scalars["ID"]["output"];
+  isbn: Scalars["String"]["output"];
 };
 
 export type BookPayload = BookResult | PayloadError;
@@ -46,8 +56,8 @@ export type BookResult = {
 
 export type Magazine = {
   __typename: "Magazine";
-  id: Scalars["ID"];
-  issueNumber: Scalars["Int"];
+  id: Scalars["ID"]["output"];
+  issueNumber: Scalars["Int"]["output"];
 };
 
 export type PayloadError = {
@@ -61,38 +71,82 @@ export type PayloadErrorType =
   | "NOT_FOUND"
   | "UNEXPECTED_ERROR";
 
+export type PriceAmount = {
+  __typename: "PriceAmount";
+  amount?: Maybe<Scalars["Float"]["output"]>;
+  amountDisplayed?: Maybe<Scalars["Boolean"]["output"]>;
+  currency?: Maybe<Scalars["String"]["output"]>;
+  display?: Maybe<Scalars["String"]["output"]>;
+  includingVat: Scalars["Boolean"]["output"];
+  selector?: Maybe<Scalars["String"]["output"]>;
+  source: Scalars["String"]["output"];
+  taxAmount?: Maybe<Scalars["Float"]["output"]>;
+};
+
+export type PriceAmountDisplayArgs = {
+  locale?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type PricePoint = {
+  __typename: "PricePoint";
+  displayPrice?: Maybe<PriceAmount>;
+  priceExclTax?: Maybe<PriceAmount>;
+  priceInclNonVatTax?: Maybe<PriceAmount>;
+  priceInclTax?: Maybe<PriceAmount>;
+  priceInclVat?: Maybe<PriceAmount>;
+  taxAmount?: Maybe<PriceAmount>;
+  vatAmount?: Maybe<PriceAmount>;
+};
+
 export type Query = {
   __typename: "Query";
   book: BookPayload;
+  breakdown: RealTimeFinancingBreakdown;
   readable?: Maybe<Readable>;
   user?: Maybe<User>;
 };
 
 export type QueryBookArgs = {
-  id: Scalars["ID"];
+  id: Scalars["ID"]["input"];
 };
 
 export type QueryReadableArgs = {
-  id: Scalars["ID"];
+  id: Scalars["ID"]["input"];
 };
 
 export type QueryUserArgs = {
-  id: Scalars["ID"];
+  id: Scalars["ID"]["input"];
 };
 
 export type Readable = Magazine | ShortNovel;
 
+export type RealTimeFinancingBreakdown = {
+  __typename: "RealTimeFinancingBreakdown";
+  adjustedPreFinancingAmount?: Maybe<PricePoint>;
+  creditAmount?: Maybe<PriceAmount>;
+  excessMileageRate?: Maybe<Scalars["Float"]["output"]>;
+  finalPaymentAmount?: Maybe<PriceAmount>;
+  financeDiscountContribution?: Maybe<PricePoint>;
+  financedAmount?: Maybe<PriceAmount>;
+  interestAmount?: Maybe<PriceAmount>;
+  perInstallmentPrice?: Maybe<PriceAmount>;
+  preFinancingPrice?: Maybe<PricePoint>;
+  referenceId?: Maybe<Scalars["String"]["output"]>;
+  totalDeposit?: Maybe<PricePoint>;
+  totalPayableAmount?: Maybe<PriceAmount>;
+};
+
 export type ShortNovel = {
   __typename: "ShortNovel";
-  id: Scalars["ID"];
-  summary: Scalars["String"];
+  id: Scalars["ID"]["output"];
+  summary: Scalars["String"]["output"];
 };
 
 export type User = {
   __typename: "User";
   booksRead: Array<Book>;
-  fullName: Scalars["String"];
-  id: Scalars["ID"];
+  fullName: Scalars["String"]["output"];
+  id: Scalars["ID"]["output"];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -201,19 +255,9 @@ export type DirectiveResolverFn<
 ) => TResult | Promise<TResult>;
 
 /** Mapping of union types */
-export type ResolversUnionTypes = {
+export type ResolversUnionTypes<RefType extends Record<string, unknown>> = {
   BookPayload:
-    | (Omit<BookResult, "result"> & { result?: Maybe<ResolversTypes["Book"]> })
-    | PayloadError;
-  Readable: Magazine | ShortNovel;
-};
-
-/** Mapping of union parent types */
-export type ResolversUnionParentTypes = {
-  BookPayload:
-    | (Omit<BookResult, "result"> & {
-        result?: Maybe<ResolversParentTypes["Book"]>;
-      })
+    | (Omit<BookResult, "result"> & { result?: Maybe<RefType["Book"]> })
     | PayloadError;
   Readable: Magazine | ShortNovel;
 };
@@ -221,42 +265,138 @@ export type ResolversUnionParentTypes = {
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Book: ResolverTypeWrapper<BookMapper>;
-  ID: ResolverTypeWrapper<Scalars["ID"]>;
-  String: ResolverTypeWrapper<Scalars["String"]>;
-  BookPayload: ResolverTypeWrapper<ResolversUnionTypes["BookPayload"]>;
+  ID: ResolverTypeWrapper<Scalars["ID"]["output"]>;
+  String: ResolverTypeWrapper<Scalars["String"]["output"]>;
+  BookPayload: ResolverTypeWrapper<
+    ResolversUnionTypes<ResolversTypes>["BookPayload"]
+  >;
   BookResult: ResolverTypeWrapper<
     Omit<BookResult, "result"> & { result?: Maybe<ResolversTypes["Book"]> }
   >;
-  DateTime: ResolverTypeWrapper<Scalars["DateTime"]>;
+  DateTime: ResolverTypeWrapper<Scalars["DateTime"]["output"]>;
   Magazine: ResolverTypeWrapper<Magazine>;
-  Int: ResolverTypeWrapper<Scalars["Int"]>;
+  Int: ResolverTypeWrapper<Scalars["Int"]["output"]>;
   PayloadError: ResolverTypeWrapper<PayloadError>;
   PayloadErrorType: PayloadErrorType;
+  PriceAmount: ResolverTypeWrapper<PriceAmountMapper>;
+  Float: ResolverTypeWrapper<Scalars["Float"]["output"]>;
+  Boolean: ResolverTypeWrapper<Scalars["Boolean"]["output"]>;
+  PricePoint: ResolverTypeWrapper<
+    Omit<
+      PricePoint,
+      | "displayPrice"
+      | "priceExclTax"
+      | "priceInclNonVatTax"
+      | "priceInclTax"
+      | "priceInclVat"
+      | "taxAmount"
+      | "vatAmount"
+    > & {
+      displayPrice?: Maybe<ResolversTypes["PriceAmount"]>;
+      priceExclTax?: Maybe<ResolversTypes["PriceAmount"]>;
+      priceInclNonVatTax?: Maybe<ResolversTypes["PriceAmount"]>;
+      priceInclTax?: Maybe<ResolversTypes["PriceAmount"]>;
+      priceInclVat?: Maybe<ResolversTypes["PriceAmount"]>;
+      taxAmount?: Maybe<ResolversTypes["PriceAmount"]>;
+      vatAmount?: Maybe<ResolversTypes["PriceAmount"]>;
+    }
+  >;
   Query: ResolverTypeWrapper<{}>;
-  Readable: ResolverTypeWrapper<ResolversUnionTypes["Readable"]>;
+  Readable: ResolverTypeWrapper<
+    ResolversUnionTypes<ResolversTypes>["Readable"]
+  >;
+  RealTimeFinancingBreakdown: ResolverTypeWrapper<
+    Omit<
+      RealTimeFinancingBreakdown,
+      | "adjustedPreFinancingAmount"
+      | "creditAmount"
+      | "finalPaymentAmount"
+      | "financeDiscountContribution"
+      | "financedAmount"
+      | "interestAmount"
+      | "perInstallmentPrice"
+      | "preFinancingPrice"
+      | "totalDeposit"
+      | "totalPayableAmount"
+    > & {
+      adjustedPreFinancingAmount?: Maybe<ResolversTypes["PricePoint"]>;
+      creditAmount?: Maybe<ResolversTypes["PriceAmount"]>;
+      finalPaymentAmount?: Maybe<ResolversTypes["PriceAmount"]>;
+      financeDiscountContribution?: Maybe<ResolversTypes["PricePoint"]>;
+      financedAmount?: Maybe<ResolversTypes["PriceAmount"]>;
+      interestAmount?: Maybe<ResolversTypes["PriceAmount"]>;
+      perInstallmentPrice?: Maybe<ResolversTypes["PriceAmount"]>;
+      preFinancingPrice?: Maybe<ResolversTypes["PricePoint"]>;
+      totalDeposit?: Maybe<ResolversTypes["PricePoint"]>;
+      totalPayableAmount?: Maybe<ResolversTypes["PriceAmount"]>;
+    }
+  >;
   ShortNovel: ResolverTypeWrapper<ShortNovel>;
   User: ResolverTypeWrapper<UserMapper>;
-  Boolean: ResolverTypeWrapper<Scalars["Boolean"]>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Book: BookMapper;
-  ID: Scalars["ID"];
-  String: Scalars["String"];
-  BookPayload: ResolversUnionParentTypes["BookPayload"];
+  ID: Scalars["ID"]["output"];
+  String: Scalars["String"]["output"];
+  BookPayload: ResolversUnionTypes<ResolversParentTypes>["BookPayload"];
   BookResult: Omit<BookResult, "result"> & {
     result?: Maybe<ResolversParentTypes["Book"]>;
   };
-  DateTime: Scalars["DateTime"];
+  DateTime: Scalars["DateTime"]["output"];
   Magazine: Magazine;
-  Int: Scalars["Int"];
+  Int: Scalars["Int"]["output"];
   PayloadError: PayloadError;
+  PriceAmount: PriceAmountMapper;
+  Float: Scalars["Float"]["output"];
+  Boolean: Scalars["Boolean"]["output"];
+  PricePoint: Omit<
+    PricePoint,
+    | "displayPrice"
+    | "priceExclTax"
+    | "priceInclNonVatTax"
+    | "priceInclTax"
+    | "priceInclVat"
+    | "taxAmount"
+    | "vatAmount"
+  > & {
+    displayPrice?: Maybe<ResolversParentTypes["PriceAmount"]>;
+    priceExclTax?: Maybe<ResolversParentTypes["PriceAmount"]>;
+    priceInclNonVatTax?: Maybe<ResolversParentTypes["PriceAmount"]>;
+    priceInclTax?: Maybe<ResolversParentTypes["PriceAmount"]>;
+    priceInclVat?: Maybe<ResolversParentTypes["PriceAmount"]>;
+    taxAmount?: Maybe<ResolversParentTypes["PriceAmount"]>;
+    vatAmount?: Maybe<ResolversParentTypes["PriceAmount"]>;
+  };
   Query: {};
-  Readable: ResolversUnionParentTypes["Readable"];
+  Readable: ResolversUnionTypes<ResolversParentTypes>["Readable"];
+  RealTimeFinancingBreakdown: Omit<
+    RealTimeFinancingBreakdown,
+    | "adjustedPreFinancingAmount"
+    | "creditAmount"
+    | "finalPaymentAmount"
+    | "financeDiscountContribution"
+    | "financedAmount"
+    | "interestAmount"
+    | "perInstallmentPrice"
+    | "preFinancingPrice"
+    | "totalDeposit"
+    | "totalPayableAmount"
+  > & {
+    adjustedPreFinancingAmount?: Maybe<ResolversParentTypes["PricePoint"]>;
+    creditAmount?: Maybe<ResolversParentTypes["PriceAmount"]>;
+    finalPaymentAmount?: Maybe<ResolversParentTypes["PriceAmount"]>;
+    financeDiscountContribution?: Maybe<ResolversParentTypes["PricePoint"]>;
+    financedAmount?: Maybe<ResolversParentTypes["PriceAmount"]>;
+    interestAmount?: Maybe<ResolversParentTypes["PriceAmount"]>;
+    perInstallmentPrice?: Maybe<ResolversParentTypes["PriceAmount"]>;
+    preFinancingPrice?: Maybe<ResolversParentTypes["PricePoint"]>;
+    totalDeposit?: Maybe<ResolversParentTypes["PricePoint"]>;
+    totalPayableAmount?: Maybe<ResolversParentTypes["PriceAmount"]>;
+  };
   ShortNovel: ShortNovel;
   User: UserMapper;
-  Boolean: Scalars["Boolean"];
 };
 
 export type BookResolvers<
@@ -309,6 +449,72 @@ export type PayloadErrorResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type PriceAmountResolvers<
+  ContextType = ResolverContext,
+  ParentType extends ResolversParentTypes["PriceAmount"] = ResolversParentTypes["PriceAmount"]
+> = {
+  amount?: Resolver<Maybe<ResolversTypes["Float"]>, ParentType, ContextType>;
+  amountDisplayed?: Resolver<
+    Maybe<ResolversTypes["Boolean"]>,
+    ParentType,
+    ContextType
+  >;
+  currency?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  display?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType,
+    Partial<PriceAmountDisplayArgs>
+  >;
+  includingVat?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  selector?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  source?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  taxAmount?: Resolver<Maybe<ResolversTypes["Float"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PricePointResolvers<
+  ContextType = ResolverContext,
+  ParentType extends ResolversParentTypes["PricePoint"] = ResolversParentTypes["PricePoint"]
+> = {
+  displayPrice?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  priceExclTax?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  priceInclNonVatTax?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  priceInclTax?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  priceInclVat?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  taxAmount?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  vatAmount?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type QueryResolvers<
   ContextType = ResolverContext,
   ParentType extends ResolversParentTypes["Query"] = ResolversParentTypes["Query"]
@@ -318,6 +524,11 @@ export type QueryResolvers<
     ParentType,
     ContextType,
     RequireFields<QueryBookArgs, "id">
+  >;
+  breakdown?: Resolver<
+    ResolversTypes["RealTimeFinancingBreakdown"],
+    ParentType,
+    ContextType
   >;
   readable?: Resolver<
     Maybe<ResolversTypes["Readable"]>,
@@ -342,6 +553,73 @@ export type ReadableResolvers<
     ParentType,
     ContextType
   >;
+};
+
+export type RealTimeFinancingBreakdownResolvers<
+  ContextType = ResolverContext,
+  ParentType extends ResolversParentTypes["RealTimeFinancingBreakdown"] = ResolversParentTypes["RealTimeFinancingBreakdown"]
+> = {
+  adjustedPreFinancingAmount?: Resolver<
+    Maybe<ResolversTypes["PricePoint"]>,
+    ParentType,
+    ContextType
+  >;
+  creditAmount?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  excessMileageRate?: Resolver<
+    Maybe<ResolversTypes["Float"]>,
+    ParentType,
+    ContextType
+  >;
+  finalPaymentAmount?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  financeDiscountContribution?: Resolver<
+    Maybe<ResolversTypes["PricePoint"]>,
+    ParentType,
+    ContextType
+  >;
+  financedAmount?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  interestAmount?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  perInstallmentPrice?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  preFinancingPrice?: Resolver<
+    Maybe<ResolversTypes["PricePoint"]>,
+    ParentType,
+    ContextType
+  >;
+  referenceId?: Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ParentType,
+    ContextType
+  >;
+  totalDeposit?: Resolver<
+    Maybe<ResolversTypes["PricePoint"]>,
+    ParentType,
+    ContextType
+  >;
+  totalPayableAmount?: Resolver<
+    Maybe<ResolversTypes["PriceAmount"]>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type ShortNovelResolvers<
@@ -370,8 +648,11 @@ export type Resolvers<ContextType = ResolverContext> = {
   DateTime?: GraphQLScalarType;
   Magazine?: MagazineResolvers<ContextType>;
   PayloadError?: PayloadErrorResolvers<ContextType>;
+  PriceAmount?: PriceAmountResolvers<ContextType>;
+  PricePoint?: PricePointResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Readable?: ReadableResolvers<ContextType>;
+  RealTimeFinancingBreakdown?: RealTimeFinancingBreakdownResolvers<ContextType>;
   ShortNovel?: ShortNovelResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
 };
