@@ -50,6 +50,10 @@ export type Magazine = {
   issueNumber: Scalars["Int"];
 };
 
+export type Mutation = {
+  __typename: "Mutation";
+};
+
 export type PayloadError = {
   __typename: "PayloadError";
   error: PayloadErrorType;
@@ -230,6 +234,7 @@ export type ResolversTypes = {
   DateTime: ResolverTypeWrapper<Scalars["DateTime"]>;
   Magazine: ResolverTypeWrapper<Magazine>;
   Int: ResolverTypeWrapper<Scalars["Int"]>;
+  Mutation: ResolverTypeWrapper<{}>;
   PayloadError: ResolverTypeWrapper<PayloadError>;
   PayloadErrorType: PayloadErrorType;
   Query: ResolverTypeWrapper<{}>;
@@ -251,6 +256,7 @@ export type ResolversParentTypes = {
   DateTime: Scalars["DateTime"];
   Magazine: Magazine;
   Int: Scalars["Int"];
+  Mutation: {};
   PayloadError: PayloadError;
   Query: {};
   Readable: ResolversUnionParentTypes["Readable"];
@@ -300,6 +306,11 @@ export type MagazineResolvers<
   issueNumber?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
+
+export type MutationResolvers<
+  ContextType = ResolverContext,
+  ParentType extends ResolversParentTypes["Mutation"] = ResolversParentTypes["Mutation"]
+> = {};
 
 export type PayloadErrorResolvers<
   ContextType = ResolverContext,
@@ -369,6 +380,7 @@ export type Resolvers<ContextType = ResolverContext> = {
   BookResult?: BookResultResolvers<ContextType>;
   DateTime?: GraphQLScalarType;
   Magazine?: MagazineResolvers<ContextType>;
+  Mutation?: MutationResolvers<ContextType>;
   PayloadError?: PayloadErrorResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Readable?: ReadableResolvers<ContextType>;

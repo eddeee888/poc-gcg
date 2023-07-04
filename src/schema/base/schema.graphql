@@ -1,4 +1,5 @@
 type Query
+type Mutation # Comment this out to avoid runtime error when making the queries to localhost:3000/graphql
 
 type PayloadError {
   error: PayloadErrorType!
